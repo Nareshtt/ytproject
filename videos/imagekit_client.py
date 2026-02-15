@@ -3,7 +3,11 @@ from imagekitio import ImageKit
 
 
 def get_imagekit_client():
-    return ImageKit()
+    return ImageKit(
+        public_key=os.environ.get("IMAGEKIT_PUBLIC_KEY"),
+        private_key=os.environ.get("IMAGEKIT_PRIVATE_KEY"),
+        url_endpoint=os.environ.get("IMAGEKIT_URL_ENDPOINT", "")
+    )
 
 
 def _get_watermark_transformation(username: str):
@@ -47,15 +51,12 @@ def add_image_watermark(
 
 
 def upload_video(file_data: bytes, file_name: str, folder: str = "videos") -> dict:
-    public_key = os.environ.get("IMAGEKIT_PUBLIC_KEY")
-
     client = get_imagekit_client()
 
     response = client.files.upload(
         file=file_data,
         file_name=file_name,
-        folder=folder,
-        public_key=public_key
+        folder=folder
     )
 
     return {
@@ -66,9 +67,8 @@ def upload_video(file_data: bytes, file_name: str, folder: str = "videos") -> di
 
 def upload_thumbnail(file_data: bytes, file_name: str, folder: str = "thumbnails") -> dict:
     import base64
-    public_key = os.environ.get("IMAGEKIT_PUBLIC_KEY")
 
-    if file_data.startswith("data:"):
+    if isinstance(file_data, str) and file_data.startswith("data:"):
         base64_data = file_data.split(",", 1)[1]
         image_bytes = base64.b64decode(base64_data)
     else:
@@ -79,8 +79,7 @@ def upload_thumbnail(file_data: bytes, file_name: str, folder: str = "thumbnails
     response = client.files.upload(
         file=image_bytes,
         file_name=file_name,
-        folder=folder,
-        public_key=public_key
+        folder=folder
     )
 
     return {
